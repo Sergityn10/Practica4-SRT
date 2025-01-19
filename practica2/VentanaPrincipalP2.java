@@ -25,204 +25,299 @@ import srt.*;
 public class VentanaPrincipalP2 extends S {
   protected Mensajes H;
   protected SignatureOptions signatureOptions;
-  public JFrame I = null;
+  public JFrame ventanaPrincipal = null;
   
-  protected JPanel Z = null;
+  protected JPanel panelContenido = null;
   
-  protected JMenuBar C = null;
+  protected JMenuBar barraMenu = null;
   
-  protected JMenu B = null;
+  protected JMenu menuFichero = null;
   
-  protected JMenu D = null;
+  protected JMenu menuOpciones = null;
   
-  protected JMenu add = null;
+  protected JMenu menuAyuda = null;
   
-  protected JMenuItem addActionListener = null;
+  protected JMenuItem menuItemSalir = null;
   
-  protected JMenuItem append = null;
+  protected JMenuItem menuItemAcercaDe = null;
   
-  protected JMenuItem F = null;
+  protected JMenuItem menuItemOpciones = null;
   
-  protected JMenuItem J = null;
+  protected JMenuItem menuItemVerInformacion = null;
   
-  protected JMenuItem console = null;
+  protected JMenuItem menuItemCifrar = null;
   
-  protected JMenuItem equals = null;
+  protected JMenuItem menuItemDescifrar = null;
   
-  protected JTextArea S = null;
+  protected JTextArea areaText = null;
   
-  protected JScrollPane getAbsolutePath = null;
+  protected JScrollPane scrollMensajes = null;
   
-  private Options getDefaultToolkit = new Options();
+//  private Options options = new Options();
   
-  CifradoOriginal getKeyStroke = null;
-  
+  CifradoOriginal keyStroke = null;
+
+  /**
+   * Constructor principal de la ventana. Inicializa componentes y configura los algoritmos de cifrado.
+   */
   public VentanaPrincipalP2() {
-    this.getKeyStroke = new CifradoOriginal(this);
-    this.getDefaultToolkit.setSymmetricalCipher(Options.symmetricalAlgorithms[0]);
+    this.keyStroke = new CifradoOriginal(this);
+//    this.options.setSymmetricalCipher(Options.symmetricalAlgorithms[0]);
+    try {
+      this.signatureOptions = (SignatureOptions) SignatureOptions.load(SignatureOptions.optionsFileName);
+    } catch (Exception exception) {
+      this.signatureOptions = new SignatureOptions();
+    }
   }
+
+  /**
+   * Obtiene las opciones de firma digital configuradas en la ventana.
+   *
+   * @return Las opciones de firma digital configuradas.
+   */
 
   public SignatureOptions getSignatureOptions() {
     return this.signatureOptions; // Asumiendo que existe un campo llamado 'signatureOptions'
   }
-  
-  protected final JFrame I() {
-    if (this.I == null) {
-      this.I = new JFrame();
-      this.I.setDefaultCloseOperation(3);
-      this.I.setBounds(new Rectangle(0, 0, 553, 382));
-      this.I.setPreferredSize(new Dimension(400, 300));
-      this.I.setResizable(false);
-      this.I.setJMenuBar(Z());
-      this.I.setContentPane(add());
+
+  /**
+   * Crea e inicializa la ventana principal de la aplicación si aún no existe.
+   *
+   * @return JFrame configurado y listo para su visualización.
+   */
+  protected final JFrame crearVentanaPrincipal() {
+    if (this.ventanaPrincipal == null) {
+      this.ventanaPrincipal = new JFrame();
+      this.ventanaPrincipal.setDefaultCloseOperation(3);
+      this.ventanaPrincipal.setBounds(new Rectangle(0, 0, 553, 382));
+      this.ventanaPrincipal.setPreferredSize(new Dimension(400, 300));
+      this.ventanaPrincipal.setResizable(false);
+      this.ventanaPrincipal.setJMenuBar(crearBarraMenu());
+      this.ventanaPrincipal.setContentPane(crearPanelContenido());
 //      this.I.setTitle(this.H.getProperty("title"));
-      this.I.setTitle("Practica 2");
+      this.ventanaPrincipal.setTitle("Practica 2");
       Dimension dimension1 = Toolkit.getDefaultToolkit().getScreenSize();
-      Dimension dimension2 = this.I.getSize();
+      Dimension dimension2 = this.ventanaPrincipal.getSize();
       if (dimension2.height > dimension1.height)
         dimension2.height = dimension1.height; 
       if (dimension2.width > dimension1.width)
         dimension2.width = dimension1.width; 
-      this.I.setLocation((dimension1.width - dimension2.width) / 2, (dimension1.height - dimension2.height) / 2);
+      this.ventanaPrincipal.setLocation((dimension1.width - dimension2.width) / 2, (dimension1.height - dimension2.height) / 2);
     } 
-    return this.I;
+    return this.ventanaPrincipal;
   }
-  
-  protected final JPanel add() {
-    if (this.Z == null) {
-      this.Z = new JPanel();
-      this.Z.setLayout((LayoutManager)null);
-      this.Z.add(getDefaultToolkit());
+  /**
+   * Crea el panel principal de la ventana, donde se añaden componentes gráficos.
+   *
+   * @return JPanel principal configurado.
+   */
+  protected final JPanel crearPanelContenido() {
+    if (this.panelContenido == null) {
+      this.panelContenido = new JPanel();
+      this.panelContenido.setLayout((LayoutManager)null);
+      this.panelContenido.add(crearScrollMensajes());
     } 
-    return this.Z;
+    return this.panelContenido;
   }
-  
-  protected JMenuBar Z() {
-    if (this.C == null) {
-      this.C = new JMenuBar();
-      this.C.add(addActionListener());
-      this.C.add(append());
-      this.C.add(C());
+  /**
+   * Crea el panel principal de la ventana, donde se añaden componentes gráficos.
+   *
+   * @return JPanel principal configurado.
+   */
+  protected JMenuBar crearBarraMenu() {
+    if (this.barraMenu == null) {
+      this.barraMenu = new JMenuBar();
+      this.barraMenu.add(crearMenuFichero());
+      this.barraMenu.add(crearMenuOpciones());
+      this.barraMenu.add(crearMenuAyuda());
     } 
-    return this.C;
+    return this.barraMenu;
   }
-  
-  private JMenu addActionListener() {
-    if (this.B == null) {
-      this.B = new JMenu();
-      this.B.setText("Fichero");
-      this.B.add(F());
-      this.B.add(J());
-      this.B.add(funcionSalirVentana());
+  /**
+   * Crea el menú "Fichero" con las opciones de cifrar, descifrar y salir.
+   *
+   * @return JMenu configurado.
+   */
+  private JMenu crearMenuFichero() {
+    if (this.menuFichero == null) {
+      this.menuFichero = new JMenu();
+      this.menuFichero.setText("Fichero");
+      this.menuFichero.add(crearMenuItemCifrar());
+      this.menuFichero.add(crearMenuItemDescifrar());
+      this.menuFichero.add(crearMenuItemSalir());
     } 
-    return this.B;
+    return this.menuFichero;
   }
-  
-  private JMenu append() {
-    if (this.D == null) {
-      this.D = new JMenu();
-      this.D.setText("Opciones");
-      this.D.add(D());
-      this.D.add(equals());
+  /**
+   * Crea el menú "Opciones" con opciones adicionales como mostrar algoritmos disponibles.
+   *
+   * @return JMenu configurado.
+   */
+  private JMenu crearMenuOpciones() {
+    if (this.menuOpciones == null) {
+      this.menuOpciones = new JMenu();
+      this.menuOpciones.setText("Opciones");
+      this.menuOpciones.add(crearMenuItemOpciones());
+      this.menuOpciones.add(crearMenuItemVerInformacion());
     } 
-    return this.D;
+    return this.menuOpciones;
   }
-  
-  protected final JMenu C() {
-    if (this.add == null) {
-      this.add = new JMenu();
-      this.add.setText("Ayuda");
-      this.add.add(console());
+
+  /**
+   * Crea el menú "Ayuda" con información acerca de la aplicación.
+   *
+   * @return JMenu configurado.
+   */
+  protected final JMenu crearMenuAyuda() {
+    if (this.menuAyuda == null) {
+      this.menuAyuda = new JMenu();
+      this.menuAyuda.setText("Ayuda");
+      this.menuAyuda.add(crearMenuItemAcercaDe());
     } 
-    return this.add;
+    return this.menuAyuda;
   }
-  
-  protected final JMenuItem funcionSalirVentana() {
-    if (this.addActionListener == null) {
-      this.addActionListener = new JMenuItem();
-      this.addActionListener.setText("Salir");
-      this.addActionListener.addActionListener(new EventoSalir(this));
+
+  /**
+   * Crea la opción "Salir" dentro del menú "Fichero" y asigna su acción correspondiente.
+   *
+   * @return JMenuItem configurado.
+   */
+  protected final JMenuItem crearMenuItemSalir() {
+    if (this.menuItemSalir == null) {
+      this.menuItemSalir = new JMenuItem();
+      this.menuItemSalir.setText("Salir");
+      this.menuItemSalir.addActionListener(new EventoSalir(this));
     } 
-    return this.addActionListener;
+    return this.menuItemSalir;
   }
-  
-  protected final JMenuItem console() {
-    if (this.append == null) {
-      this.append = new JMenuItem();
-      this.append.setText("Acerca de");
+
+  /**
+   * Crea la opción "Acerca de" dentro del menú "Ayuda".
+   *
+   * @return JMenuItem configurado.
+   */
+  protected final JMenuItem crearMenuItemAcercaDe() {
+    if (this.menuItemAcercaDe == null) {
+      this.menuItemAcercaDe = new JMenuItem();
+      this.menuItemAcercaDe.setText("Acerca de");
 //      this.append.addActionListener(new B(this));
     } 
-    return this.append;
+    return this.menuItemAcercaDe;
   }
-  
-  protected JMenuItem D() {
-    if (this.F == null) {
-      this.F = new JMenuItem();
-      this.F.setText("Opciones");
-      this.F.setAccelerator(KeyStroke.getKeyStroke(79, 2, true));
-//      this.F.addActionListener(new D(this));
+  /**
+   * Crea la opción "Opciones" dentro del menú "Opciones" con un atajo de teclado.
+   *
+   * @return JMenuItem configurado.
+   */
+  protected JMenuItem crearMenuItemOpciones() {
+    if (this.menuItemOpciones == null) {
+      this.menuItemOpciones = new JMenuItem();
+      this.menuItemOpciones.setText("Opciones");
+      this.menuItemOpciones.setAccelerator(KeyStroke.getKeyStroke(79, 2, true));
+      this.menuItemOpciones.addActionListener(new EventoMostrarAlgoritmosFirmaDisponibles(this));
     } 
-    return this.F;
+    return this.menuItemOpciones;
   }
+
+  /**
+   * Crea la opción "Ver información" dentro del menú "Opciones" con un atajo de teclado.
+   *
+   * @return JMenuItem configurado.
+   */
   
-  private JMenuItem equals() {
-    if (this.J == null) {
-      this.J = new JMenuItem();
-      this.J.setText("Ver información");
-      this.J.setAccelerator(KeyStroke.getKeyStroke(86, 2, true));
-      this.J.addActionListener(new F(this));
+  private JMenuItem crearMenuItemVerInformacion() {
+    if (this.menuItemVerInformacion == null) {
+      this.menuItemVerInformacion = new JMenuItem();
+      this.menuItemVerInformacion.setText("Ver información");
+      this.menuItemVerInformacion.setAccelerator(KeyStroke.getKeyStroke(86, 2, true));
+      this.menuItemVerInformacion.addActionListener(new EventoMostrarAlgoritmosCifradosDisponibles(this));
     } 
-    return this.J;
+    return this.menuItemVerInformacion;
   }
-  
-  protected final JMenuItem F() {
-    if (this.console == null) {
-      this.console = new JMenuItem();
-      this.console.setText("Cifrar");
-      this.console.setAccelerator(KeyStroke.getKeyStroke(67, 2, true));
-      this.console.addActionListener(new MostrarVentanaFicheroCifrar(this));
+
+
+  /**
+   * Crea la opción "Cifrar" dentro del menú "Fichero" con un atajo de teclado.
+   *
+   * @return JMenuItem configurado.
+   */
+  protected final JMenuItem crearMenuItemCifrar() {
+    if (this.menuItemCifrar == null) {
+      this.menuItemCifrar = new JMenuItem();
+      this.menuItemCifrar.setText("Cifrar");
+      this.menuItemCifrar.setAccelerator(KeyStroke.getKeyStroke(67, 2, true));
+      this.menuItemCifrar.addActionListener(new MostrarVentanaFicheroCifrar(this));
     } 
-    return this.console;
+    return this.menuItemCifrar;
   }
+
+  /**
+   * Crea la opción "Descifrar" dentro del menú "Fichero" con un atajo de teclado.
+   *
+   * @return JMenuItem configurado.
+   */
   
-  protected final JMenuItem J() {
-    if (this.equals == null) {
-      this.equals = new JMenuItem();
-      this.equals.setText("Descifrar");
-      this.equals.setAccelerator(KeyStroke.getKeyStroke(68, 2, true));
-      this.equals.addActionListener(new EventoMostrarVentanaFicheroDescifrar(this));
+  protected final JMenuItem crearMenuItemDescifrar() {
+    if (this.menuItemDescifrar == null) {
+      this.menuItemDescifrar = new JMenuItem();
+      this.menuItemDescifrar.setText("Descifrar");
+      this.menuItemDescifrar.setAccelerator(KeyStroke.getKeyStroke(68, 2, true));
+      this.menuItemDescifrar.addActionListener(new EventoMostrarVentanaFicheroDescifrar(this));
 
     } 
-    return this.equals;
+    return this.menuItemDescifrar;
   }
+
+  /**
+   * Crea un área de texto para mostrar información en la ventana principal.
+   *
+   * @return JTextArea configurada.
+   */
   
-  private JTextArea getAbsolutePath() {
-    if (this.S == null) {
-      this.S = new JTextArea();
-      this.S.setForeground(Color.red);
+  private JTextArea crearAreaTextoMensajes() {
+    if (this.areaText == null) {
+      this.areaText = new JTextArea();
+      this.areaText.setForeground(Color.red);
     } 
-    return this.S;
+    return this.areaText;
   }
-  
-  public void I(String paramString) {
-    if (this.I != null) {
-      this.S.append(paramString);
-      this.I.repaint();
+  /**
+   * Añade un mensaje al área de texto de la ventana principal.
+   * Si la ventana no está visible, imprime el mensaje en la consola.
+   *
+   * @param paramString Mensaje a mostrar.
+   */
+  public void mostrarMensaje(String paramString) {
+    if (this.ventanaPrincipal != null) {
+      this.areaText.append(paramString);
+      this.ventanaPrincipal.repaint();
     } else {
       System.out.println(paramString);
     } 
   }
+
+  /**
+   * Crea un panel de desplazamiento que contiene el área de texto principal.
+   *
+   * @return JScrollPane configurado.
+   */
   
-  protected final JScrollPane getDefaultToolkit() {
-    if (this.getAbsolutePath == null) {
-      this.getAbsolutePath = new JScrollPane();
-      this.getAbsolutePath.setPreferredSize(new Dimension(40, 200));
-      this.getAbsolutePath.setViewportView(getAbsolutePath());
-      this.getAbsolutePath.setSize(new Dimension(547, 325));
+  protected final JScrollPane crearScrollMensajes() {
+    if (this.scrollMensajes == null) {
+      this.scrollMensajes = new JScrollPane();
+      this.scrollMensajes.setPreferredSize(new Dimension(40, 200));
+      this.scrollMensajes.setViewportView(crearAreaTextoMensajes());
+      this.scrollMensajes.setSize(new Dimension(547, 325));
     } 
-    return this.getAbsolutePath;
+    return this.scrollMensajes;
   }
-  
+
+
+  /**
+   * Punto de entrada de la aplicación. Muestra la ventana principal o ejecuta comandos por consola.
+   *
+   * @param paramArrayOfString Argumentos de la línea de comandos.
+   */
   public static void main(String[] paramArrayOfString) {
     if (paramArrayOfString.length == 0) {
       SwingUtilities.invokeLater(new VisibilizarVentanaPrincipal());
@@ -230,63 +325,77 @@ public class VentanaPrincipalP2 extends S {
       getLocation(paramArrayOfString);
     } 
   }
-  
+
+  /**
+   * Muestra una ventana de selección de archivo para cifrar, solicita la frase de paso y realiza el cifrado.
+   */
   public final void GUIMostrarVentanaFicheroCifrar() {
     JFileChooser jFileChooser = new JFileChooser();
     jFileChooser.setDialogTitle("Fichero a cifrar");
-    int i = jFileChooser.showOpenDialog(this.Z);
+    int i = jFileChooser.showOpenDialog(this.panelContenido);
     if (i == 0) {
       String str = jFileChooser.getSelectedFile().getAbsolutePath();
       PasswdDialog passwdDialog = new PasswdDialog("Frase de paso", (byte)1);
       passwdDialog.pack();
-      Point point = I().getLocation();
+      Point point = crearVentanaPrincipal().getLocation();
       point.translate(20, 20);
       passwdDialog.setLocation(point);
       passwdDialog.setVisible(true);
       char[] arrayOfChar = passwdDialog.getPasswd();
       if (arrayOfChar != null)
         try {
-          this.getKeyStroke.procesoCifrado(str, I(str, "cif"), arrayOfChar, this.getDefaultToolkit.getSymmetricalCipher());
+//          this.keyStroke.procesoCifrado(str, cambioExtensionFichero(str, "cif"), arrayOfChar, this.options.getSymmetricalCipher());
+          this.keyStroke.procesoCifrado(str, cambioExtensionFichero(str, "cif"), arrayOfChar, this.signatureOptions.getSymmetricalCipher());
         } catch (Exception exception) {
-          this.S.append(exception.getMessage());
+          this.areaText.append(exception.getMessage());
         }  
     } 
   }
-  
+
+  /**
+   * Muestra una ventana de selección de archivo para descifrar, solicita la frase de paso y realiza el descifrado.
+   */
   public final void EleccionFicheroADescifrar() {
     JFileChooser jFileChooser = new JFileChooser();
     jFileChooser.setDialogTitle("Fichero a descifrar");
-    int i = jFileChooser.showOpenDialog(this.Z);
+    int i = jFileChooser.showOpenDialog(this.panelContenido);
     if (i == 0) {
       String str = jFileChooser.getSelectedFile().getAbsolutePath();
       Header z = new Header();
-      if (this.getKeyStroke.leerFichero(str, z)) {
+      if (this.keyStroke.leerFichero(str, z)) {
         PasswdDialog passwdDialog = new PasswdDialog("Frase de paso", (byte)0);
         passwdDialog.pack();
-        Point point = I().getLocation();
+        Point point = crearVentanaPrincipal().getLocation();
         point.translate(20, 20);
         passwdDialog.setLocation(point);
         passwdDialog.setVisible(true);
         char[] arrayOfChar = passwdDialog.getPasswd();
         if (arrayOfChar != null)
           try {
-            this.getKeyStroke.procesoDescrifrado(str, I(str, "cla"), arrayOfChar, z.getAlgorithm1());
+            this.keyStroke.procesoDescrifrado(str, cambioExtensionFichero(str, "cla"), arrayOfChar, z.getAlgorithm1());
           } catch (Exception exception) {
-            this.S.append(exception.getMessage());
+            this.areaText.append(exception.getMessage());
           }  
       } else {
-        this.S.append("El fichero no está cifrado.");
+        this.areaText.append("El fichero no está cifrado.");
       } 
     } 
   }
   
   public void MostrarAlgoritmosCifradosDisponbibles() {
-    this.getKeyStroke.getAlgoritmosCifradoDisponibles();
+    this.keyStroke.getAlgoritmosCifradoDisponibles();
   }
-  
-  public final String I(String paramString1, String paramString2) {
+
+  /**
+   * Funcion que nos permite cambiar o añadir una nueva extensión, si el fichero no la tiene.
+   *
+   * @param pathFichero Fichero que se va a cambiar o añadir una extension
+   * @param extension Una extension del fichero que se quiere crear
+   * @return La direccion del fichero con la nueva extensión
+   */
+  public final String cambioExtensionFichero(String pathFichero, String extension) {
     int i;
-    return ((i = paramString1.lastIndexOf(".")) == -1) ? (String.valueOf(paramString1) + "." + paramString2) : (String.valueOf(paramString1.substring(0, i)) + "." + paramString2);
+    return ((i = pathFichero.lastIndexOf(".")) == -1) ? (String.valueOf(pathFichero) + "." + extension) : (String.valueOf(pathFichero.substring(0, i)) + "." + extension);
   }
   
   public final void getKeyStroke() {
@@ -306,18 +415,18 @@ public class VentanaPrincipalP2 extends S {
         case 2:
           System.out.println("Vamos a cifrar el fichero.");
           if ((arrayOfChar = ventanaPrincipalP2.getPasswd()) != null)
-            ventanaPrincipalP2.getKeyStroke.procesoCifrado(paramArrayOfString[0], ventanaPrincipalP2.getMessage(paramArrayOfString[0], true), arrayOfChar, paramArrayOfString[1]);
+            ventanaPrincipalP2.keyStroke.procesoCifrado(paramArrayOfString[0], ventanaPrincipalP2.setExtensionArchivo(paramArrayOfString[0], true), arrayOfChar, paramArrayOfString[1]);
           return;
         case 1:
           if ((new File(paramArrayOfString[0])).isFile()) {
-            if (ventanaPrincipalP2.getKeyStroke.leerFichero(paramArrayOfString[0], z)) {
+            if (ventanaPrincipalP2.keyStroke.leerFichero(paramArrayOfString[0], z)) {
               System.out.println("Vamos a descifrar el fichero.");
               if ((arrayOfChar = ventanaPrincipalP2.getScreenSize()) != null)
-                ventanaPrincipalP2.getKeyStroke.procesoDescrifrado(paramArrayOfString[0], ventanaPrincipalP2.getMessage(paramArrayOfString[0], false), arrayOfChar, z.getAlgorithm1());
+                ventanaPrincipalP2.keyStroke.procesoDescrifrado(paramArrayOfString[0], ventanaPrincipalP2.setExtensionArchivo(paramArrayOfString[0], false), arrayOfChar, z.getAlgorithm1());
             } else {
               System.out.println("Vamos a cifrar el fichero.");
               if ((arrayOfChar = ventanaPrincipalP2.getPasswd()) != null)
-                ventanaPrincipalP2.getKeyStroke.procesoCifrado(paramArrayOfString[0], ventanaPrincipalP2.getMessage(paramArrayOfString[0], false), arrayOfChar, ventanaPrincipalP2.getDefaultToolkit.getSymmetricalCipher());
+                ventanaPrincipalP2.keyStroke.procesoCifrado(paramArrayOfString[0], ventanaPrincipalP2.setExtensionArchivo(paramArrayOfString[0], false), arrayOfChar, ventanaPrincipalP2.signatureOptions.getSymmetricalCipher());
             } 
           } else {
             System.out.println("Problemas con el fichero: " + paramArrayOfString[0]);
@@ -330,7 +439,7 @@ public class VentanaPrincipalP2 extends S {
     } 
   }
   
-  private String getMessage(String paramString, boolean paramBoolean) {
+  private String setExtensionArchivo(String paramString, boolean paramBoolean) {
     String str;
     if (paramBoolean) {
       str = String.valueOf(paramString) + ".cif";

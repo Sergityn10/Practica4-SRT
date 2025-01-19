@@ -14,7 +14,7 @@ public class I {
     return String.valueOf(append[i]) + append[j];
   }
   
-  public static final String I(byte[] paramArrayOfbyte) {
+  public static final String mostrarBytesComoString(byte[] paramArrayOfbyte) {
     String str = "";
     for (byte b = 0; b < paramArrayOfbyte.length; b++)
       str = String.valueOf(str) + append(paramArrayOfbyte[b]); 

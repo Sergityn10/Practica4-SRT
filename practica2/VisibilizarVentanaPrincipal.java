@@ -1,9 +1,13 @@
 package practica2;
 
+/**
+ * Clase utilizada para crear el thread que necesita Swing para inicializar y visualizar
+ * la ventana principal de nuestra aplicación.
+ */
 class VisibilizarVentanaPrincipal implements Runnable {
   public final void run() {
     VentanaPrincipalP2 ventanaPrincipalP2 = new VentanaPrincipalP2();
-    ventanaPrincipalP2.I().setVisible(true);
+    ventanaPrincipalP2.crearVentanaPrincipal().setVisible(true);
   }
 }
 

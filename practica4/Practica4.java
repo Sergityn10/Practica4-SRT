@@ -10,318 +10,445 @@ import javax.swing.SwingUtilities;
 import practica3.Practica3;
 
 public class Practica4 extends Practica3 {
-  private JMenuItem getKeyFilePasswd = null;
+  private JMenuItem menuItemCifradoAsimetrico = null;
+
+  private JMenuItem menuItemDescifradoAsimetrico = null;
   
-  private JMenuItem getKeyFilename = null;
+  private JMenuItem menuItemFirmar = null;
   
-  private JMenuItem getPublicCipher = null;
+  private JMenuItem menuItemVerificarFirma = null;
   
-  private JMenuItem getSelectedFile = null;
+  protected JMenuItem menuItemGenerarNuevasClaves = null;
+
+  protected JMenuItem menuItemVerClaves = null;
   
-  protected JMenuItem getSignAlgorithm = null;
+  protected JMenuItem menuItemCargarClaves = null;
   
-  protected JMenuItem invokeLater = null;
+  protected JMenuItem menuItemGuardarClaves = null;
   
-  protected JMenuItem load = null;
-  
-  protected SignatureOptions A;
+//  protected SignatureOptions signtureOpts;
 
   protected ParClavesP4 keypair;
 
   protected DigitalSignature digitalSignature;
   
-  private JMenu optionsFileName;
+  private JMenu menuCifradoSimetrico;
   
-  private JMenu setAccelerator;
+  private JMenu menuHashMac;
   
-  private JMenu setDialogTitle;
+  private JMenu menuCifradoAsimetrico;
   
-  private JMenu setText;
+  private JMenu menuFirmaDigital;
 
-
+  /**
+   * Constructor de la clase Practica4. Inicializa las configuraciones, las claves y la ventana principal.
+   */
   public Practica4() {
+    //SE CARGAN EN LA VARIABLE signtureOpts el par de claves del fichero por defecto.
     try {
-      this.A = (SignatureOptions) SignatureOptions.load(SignatureOptions.optionsFileName);
+      this.signatureOptions = (SignatureOptions) SignatureOptions.load(SignatureOptions.optionsFileName);
     } catch (Exception exception) {
-      this.A = new SignatureOptions();
-    } 
+      this.signatureOptions = new SignatureOptions();
+    }
+
+    //Se inicializan los parametros de las opciones de la firma y el par de claves.
     this.digitalSignature = new DigitalSignature(this);
     this.keypair = new ParClavesP4();
-    this.keypair.I(this.A.getKeyFilename(), this.A.getKeyFilePasswd());
-    this.I();
+    this.keypair.loadKeyPair(this.signatureOptions.getKeyFilename(), this.signatureOptions.getKeyFilePasswd());
+    this.crearVentanaPrincipal();
   }
-
+  /**
+   * Obtiene las opciones de firma actuales.
+   *
+   * @return Objeto SignatureOptions con las opciones configuradas.
+   */
   public SignatureOptions getSignatureOptions() {
-    return this.A;
+    return this.signatureOptions;
+  }
+  /**
+   * Establece nuevas opciones de firma.
+   *
+   * @param opciones Objeto SignatureOptions con las nuevas configuraciones.
+   */
+  public void setSignaturaOption(SignatureOptions opciones) {
+    this.signatureOptions = opciones;
   }
 
-  public void setSignaturaOption(SignatureOptions a) {
-    this.A = a;
-  }
-  
-  protected final JMenuBar Z() {
-    if (this.C == null) {
-      this.C = new JMenuBar();
-      this.C.add(getKeyFilePasswd());
-      this.C.add(getKeyFilename());
-      this.C.add(C());
+  /**
+   * Crea la barra de menú principal.
+   *
+   * @return Objeto JMenuBar con los menús configurados.
+   */
+  protected final JMenuBar crearBarraMenu() {
+    if (this.barraMenu == null) {
+      this.barraMenu = new JMenuBar();
+      this.barraMenu.add(crearMenuFichero());
+      this.barraMenu.add(crearMenuClaves());
+      this.barraMenu.add(crearMenuAyuda());
     } 
-    return this.C;
+    return this.barraMenu;
   }
-  
-  protected final JMenu getKeyFilePasswd() {
-    if (this.B == null) {
-      this.B = new JMenu();
-      this.B.setText("Fichero");
-      this.B.add(showOpenDialog());
-      this.B.add(M());
-      this.B.add(N());
-      this.B.add(O());
-      this.B.add(funcionSalirVentana());
+  /**
+   * Crea el menú "Fichero" con opciones relacionadas.
+   *
+   * @return Objeto JMenu con las opciones del menú "Fichero".
+   */
+  protected final JMenu crearMenuFichero() {
+    if (this.menuFichero == null) {
+      this.menuFichero = new JMenu();
+      this.menuFichero.setText("Fichero");
+      this.menuFichero.add(crearMenuCifradoSimetrico());
+      this.menuFichero.add(crearMenuHashMAC());
+      this.menuFichero.add(crearMenuCifradoAsimetrico());
+      this.menuFichero.add(crearMenuFirmaDigital());
+      this.menuFichero.add(crearMenuItemSalir());
     } 
-    return this.B;
+    return this.menuFichero;
   }
-  
-  private JMenu getKeyFilename() {
-    if (this.D == null) {
-      this.D = new JMenu();
-      this.D.setText("Claves");
-      this.D.add(D());
-      this.D.add(getPublicCipher());
-      this.D.add(invokeLater());
-      this.D.add(load());
-      this.D.add(getSignAlgorithm());
+  /**
+   * Crea el menú "Claves" con opciones relacionadas con la gestión de claves.
+   *
+   * @return Objeto JMenu con las opciones del menú "Claves".
+   */
+  private JMenu crearMenuClaves() {
+    if (this.menuOpciones == null) {
+      this.menuOpciones = new JMenu();
+      this.menuOpciones.setText("Claves");
+      this.menuOpciones.add(this.crearMenuItemOpciones());
+      this.menuOpciones.add(getPublicCipher());
+      this.menuOpciones.add(crearMenuItemCargarClaves());
+      this.menuOpciones.add(crearMenuItemGuardarClaves());
+      this.menuOpciones.add(crearMenuItemVerClaves());
     } 
-    return this.D;
+    return this.menuOpciones;
   }
-  
-  protected final JMenuItem D() {
-    if (this.F == null) {
-      this.F = new JMenuItem();
-      this.F.setText("Opciones de claves");
-      this.F.setAccelerator(KeyStroke.getKeyStroke(79, 2, true));
-      this.F.addActionListener(new B(this));
+
+  /**
+   * Crea un JMenuItem para "Opciones de claves".
+   *
+   * @return Objeto JMenuItem para la configuración de opciones de claves.
+   */
+  protected final JMenuItem crearMenuItemOpciones() {
+    if (this.menuItemOpciones == null) {
+      this.menuItemOpciones = new JMenuItem();
+      this.menuItemOpciones.setText("Opciones de claves");
+      this.menuItemOpciones.setAccelerator(KeyStroke.getKeyStroke(79, 2, true));
+      this.menuItemOpciones.addActionListener(new EventoMostrarOpcionesClaves(this));
     } 
-    return this.F;
+    return this.menuItemOpciones;
   }
-  
+  /**
+   * Crea un JMenuItem para "Generar nuevas claves".
+   *
+   * @return Objeto JMenuItem para la generación de nuevas claves.
+   */
   protected final JMenuItem getPublicCipher() {
-    if (this.getSignAlgorithm == null) {
-      this.getSignAlgorithm = new JMenuItem();
-      this.getSignAlgorithm.setText("Generar nuevas claves");
-      this.getSignAlgorithm.setAccelerator(KeyStroke.getKeyStroke(71, 2, true));
-      this.getSignAlgorithm.addActionListener(new E(this));
+    if (this.menuItemGenerarNuevasClaves == null) {
+      this.menuItemGenerarNuevasClaves = new JMenuItem();
+      this.menuItemGenerarNuevasClaves.setText("Generar nuevas claves");
+      this.menuItemGenerarNuevasClaves.setAccelerator(KeyStroke.getKeyStroke(71, 2, true));
+      this.menuItemGenerarNuevasClaves.addActionListener(new EventoGenerarNuevasClaves(this));
     } 
-    return this.getSignAlgorithm;
+    return this.menuItemGenerarNuevasClaves;
   }
-  
-  protected final JMenuItem getSignAlgorithm() {
-    if (this.J == null) {
-      this.J = new JMenuItem();
-      this.J.setText("Ver claves actuales");
-      this.J.addActionListener(new G(this));
+  /**
+   * Crea un JMenuItem para ver las claves actuales.
+   *
+   * @return Objeto JMenuItem para visualizar las claves.
+   */
+  protected final JMenuItem crearMenuItemVerClaves() {
+    if (this.menuItemVerClaves == null) {
+      this.menuItemVerClaves = new JMenuItem();
+      this.menuItemVerClaves.setText("Ver claves actuales");
+      this.menuItemVerClaves.addActionListener(new EventoMostrarClavesActuales(this));
     } 
-    return this.J;
+    return this.menuItemVerClaves;
   }
-  
-  protected final JMenuItem invokeLater() {
-    if (this.invokeLater == null) {
-      this.invokeLater = new JMenuItem();
-      this.invokeLater.setText("Cargar claves desde fichero");
-      this.invokeLater.addActionListener(new H(this));
+  /**
+   * Crea un JMenuItem para cargar claves desde un fichero.
+   *
+   * @return Objeto JMenuItem para cargar claves.
+   */
+  protected final JMenuItem crearMenuItemCargarClaves() {
+    if (this.menuItemCargarClaves == null) {
+      this.menuItemCargarClaves = new JMenuItem();
+      this.menuItemCargarClaves.setText("Cargar claves desde fichero");
+      this.menuItemCargarClaves.addActionListener(new EventoCargarClavesDesdeFichero(this));
     } 
-    return this.invokeLater;
+    return this.menuItemCargarClaves;
   }
-  
-  protected final JMenuItem load() {
-    if (this.load == null) {
-      this.load = new JMenuItem();
-      this.load.setText("Guardar claves en fichero");
-      this.load.addActionListener(new K(this));
+
+  /**
+   * Crea un JMenuItem para guardar claves en un fichero.
+   *
+   * @return Objeto JMenuItem para guardar claves.
+   */
+  protected final JMenuItem crearMenuItemGuardarClaves() {
+    if (this.menuItemGuardarClaves == null) {
+      this.menuItemGuardarClaves = new JMenuItem();
+      this.menuItemGuardarClaves.setText("Guardar claves en fichero");
+      this.menuItemGuardarClaves.addActionListener(new EventoGuardarClavesEnFichero(this));
     } 
-    return this.load;
+    return this.menuItemGuardarClaves;
   }
-  
-  private JMenuItem optionsFileName() {
-    if (this.getKeyFilePasswd == null) {
-      this.getKeyFilePasswd = new JMenuItem();
-      this.getKeyFilePasswd.setText("Cifrar KU");
-      this.getKeyFilePasswd.setAccelerator(KeyStroke.getKeyStroke(85, 2, true));
-      this.getKeyFilePasswd.addActionListener(new L(this));
+
+  /**
+   * Crea un JMenuItem para cifrar una clave pública (KU).
+   *
+   * @return Objeto JMenuItem configurado para cifrar claves públicas.
+   */
+  private JMenuItem crearMenuItemCifradoAsimetrico() {
+    if (this.menuItemCifradoAsimetrico == null) {
+      this.menuItemCifradoAsimetrico = new JMenuItem();
+      this.menuItemCifradoAsimetrico.setText("Cifrar KU");
+      this.menuItemCifradoAsimetrico.setAccelerator(KeyStroke.getKeyStroke(85, 2, true));
+      this.menuItemCifradoAsimetrico.addActionListener(new EventoCifradoAsimetrico(this));
     } 
-    return this.getKeyFilePasswd;
+    return this.menuItemCifradoAsimetrico;
   }
-  
-  private JMenuItem setAccelerator() {
-    if (this.getKeyFilename == null) {
-      this.getKeyFilename = new JMenuItem();
-      this.getKeyFilename.setText("Descifrar KR");
-      this.getKeyFilename.setAccelerator(KeyStroke.getKeyStroke(82, 2, true));
-      this.getKeyFilename.addActionListener(new M(this));
+  /**
+   * Crea un JMenuItem para descifrar una clave privada (KR).
+   *
+   * @return Objeto JMenuItem configurado para descifrar claves privadas.
+   */
+  private JMenuItem crearMenuItemDescifradoAsimetrico() {
+    if (this.menuItemDescifradoAsimetrico == null) {
+      this.menuItemDescifradoAsimetrico = new JMenuItem();
+      this.menuItemDescifradoAsimetrico.setText("Descifrar KR");
+      this.menuItemDescifradoAsimetrico.setAccelerator(KeyStroke.getKeyStroke(82, 2, true));
+      this.menuItemDescifradoAsimetrico.addActionListener(new EventoDesifradoAsimetrico(this));
     } 
-    return this.getKeyFilename;
+    return this.menuItemDescifradoAsimetrico;
   }
-  
-  private JMenuItem setDialogTitle() {
-    if (this.getPublicCipher == null) {
-      this.getPublicCipher = new JMenuItem();
-      this.getPublicCipher.setText("Firmar");
-      this.getPublicCipher.setAccelerator(KeyStroke.getKeyStroke(70, 2, true));
-      this.getPublicCipher.addActionListener(new N(this));
+  /**
+   * Crea un JMenuItem para firmar un archivo.
+   *
+   * @return Objeto JMenuItem configurado para firmar archivos.
+   */
+  private JMenuItem crearMenuItemFirmarArchivo() {
+    if (this.menuItemFirmar == null) {
+      this.menuItemFirmar = new JMenuItem();
+      this.menuItemFirmar.setText("Firmar");
+      this.menuItemFirmar.setAccelerator(KeyStroke.getKeyStroke(70, 2, true));
+      this.menuItemFirmar.addActionListener(new EventoFirmarArchivo(this));
     } 
-    return this.getPublicCipher;
+    return this.menuItemFirmar;
   }
-  
-  private JMenuItem setText() {
-    if (this.getSelectedFile == null) {
-      this.getSelectedFile = new JMenuItem();
-      this.getSelectedFile.setText("Verificar firma");
-      this.getSelectedFile.setAccelerator(KeyStroke.getKeyStroke(87, 2, true));
-      this.getSelectedFile.addActionListener(new O(this));
+
+  /**
+   * Crea un JMenuItem para verificar la firma de un archivo.
+   *
+   * @return Objeto JMenuItem configurado para verificar archivos.
+   */
+  private JMenuItem crearMenuItemVerificarFichero() {
+    if (this.menuItemVerificarFirma == null) {
+      this.menuItemVerificarFirma = new JMenuItem();
+      this.menuItemVerificarFirma.setText("Verificar firma");
+      this.menuItemVerificarFirma.setAccelerator(KeyStroke.getKeyStroke(87, 2, true));
+      this.menuItemVerificarFirma.addActionListener(new EventoVerificarFirma(this));
     } 
-    return this.getSelectedFile;
+    return this.menuItemVerificarFirma;
   }
-  
-  private JMenu showOpenDialog() {
-    if (this.optionsFileName == null) {
-      this.optionsFileName = new JMenu("Cifrado simétrico");
-      this.optionsFileName.add(F());
-      this.optionsFileName.add(J());
+
+  /**
+   * Crea el menú "Cifrado simetrico" con opciones relacionadas con el cifrado simetrico
+   *
+   * @return Objeto JMenu con las opciones del menú "Cifrado simetrico".
+   */
+  private JMenu crearMenuCifradoSimetrico() {
+    if (this.menuCifradoSimetrico == null) {
+      this.menuCifradoSimetrico = new JMenu("Cifrado simétrico");
+      this.menuCifradoSimetrico.add(crearMenuItemCifrar());
+      this.menuCifradoSimetrico.add(crearMenuItemDescifrar());
     } 
-    return this.optionsFileName;
+    return this.menuCifradoSimetrico;
   }
-  
-  private JMenu M() {
-    if (this.setAccelerator == null) {
-      this.setAccelerator = new JMenu("Hash/MAC");
-      this.setAccelerator.add(G());
-      this.setAccelerator.add(H());
+
+  /**
+   * Crea el menú "Hash/MAC" con opciones relacionadas con el cifrado simetrico
+   *
+   * @return Objeto JMenu con las opciones del menú "Hash/MAC".
+   */
+  private JMenu crearMenuHashMAC() {
+    if (this.menuHashMac == null) {
+      this.menuHashMac = new JMenu("Hash/MAC");
+      this.menuHashMac.add(crearMenuItemProtegerConHash());
+      this.menuHashMac.add(crearMenuItemVerificarConHash());
     } 
-    return this.setAccelerator;
+    return this.menuHashMac;
   }
-  
-  private JMenu N() {
-    if (this.setDialogTitle == null) {
-      this.setDialogTitle = new JMenu("Cifrado asimétrico");
-      this.setDialogTitle.add(optionsFileName());
-      this.setDialogTitle.add(setAccelerator());
+  /**
+   * Crea el menú "Cifrado Asimétrico" con opciones de cifrado y descifrado de claves públicas.
+   *
+   * @return Objeto JMenu con las opciones de cifrado asimétrico.
+   */
+  private JMenu crearMenuCifradoAsimetrico() {
+    if (this.menuCifradoAsimetrico == null) {
+      this.menuCifradoAsimetrico = new JMenu("Cifrado asimétrico");
+      this.menuCifradoAsimetrico.add(crearMenuItemCifradoAsimetrico());
+      this.menuCifradoAsimetrico.add(crearMenuItemDescifradoAsimetrico());
     } 
-    return this.setDialogTitle;
+    return this.menuCifradoAsimetrico;
   }
-  
-  private JMenu O() {
-    if (this.setText == null) {
-      this.setText = new JMenu("Firma Digital");
-      this.setText.add(setDialogTitle());
-      this.setText.add(setText());
+  /**
+   * Crea el menú "Firma Digital" con opciones para firmar y verificar archivos.
+   *
+   * @return Objeto JMenu con las opciones de firma digital.
+   */
+  private JMenu crearMenuFirmaDigital() {
+    if (this.menuFirmaDigital == null) {
+      this.menuFirmaDigital = new JMenu("Firma Digital");
+      this.menuFirmaDigital.add(crearMenuItemFirmarArchivo());
+      this.menuFirmaDigital.add(crearMenuItemVerificarFichero());
     } 
-    return this.setText;
+    return this.menuFirmaDigital;
   }
-  
-  public final void I(String paramString) {
-    this.S.append(paramString);
+
+  /**
+   * Muestra un mensaje en el cuadro de texto
+   * @param mensaje Mensaje que se desea mostrar.
+   */
+  public final void mostrarMensaje(String mensaje) {
+    this.areaText.append(mensaje);
   }
-  
-  public final void P() {
-    this.S.setText("");
+
+  /**
+   * Reinicia el cuadro de texto. Es decir, limpia su contenido para que muestre un cuadrado blanco, sin texto.
+   */
+  public final void ReiniciarTextArea() {
+    this.areaText.setText("");
   }
   
   public static final void main(String[] paramArrayOfString) {
-    SwingUtilities.invokeLater(new D());
+    SwingUtilities.invokeLater(new VisibilizarVentanaPrincipalP4());
   }
-  
-  protected final void Q() {
-    if (this.keypair.I()) {
-      P();
+
+  /**
+   * Inicia el proceso de cifrado de un archivo usando la clave pública.
+   * Se muestra un cuadro de diálogo para seleccionar el archivo a cifrar.
+   */
+  protected final void procesoCifradoAsimetrico() {
+    if (this.keypair.getIsInicialized()) {
+      ReiniciarTextArea();
       JFileChooser jFileChooser = new JFileChooser();
       jFileChooser.setDialogTitle("Fichero a cifrar");
-      int i = jFileChooser.showOpenDialog(this.Z);
+      int i = jFileChooser.showOpenDialog(this.panelContenido);
       if (i == 0) {
-        String str = jFileChooser.getSelectedFile().getAbsolutePath();
-        Z z = new Z(I(), "Cifrado de Clave Pública");
-        z.I("\nProceso de cifrado de <" + str + "> con Algoritmo: " + this.A.getPublicCipher() + "\n");
-        (new F(this, str, z)).execute();
+        String pathFichero = jFileChooser.getSelectedFile().getAbsolutePath();
+        VentanaProgressBarFicheros ventana = new VentanaProgressBarFicheros(crearVentanaPrincipal(), "Cifrado de Clave Pública");
+        ventana.I("\nProceso de cifrado de <" + pathFichero + "> con Algoritmo: " + this.signatureOptions.getPublicCipher() + "\n");
+        (new VentanaCifradoAsimetrico(this, pathFichero, ventana)).execute();
       } 
     } else {
-      I("No tenemos claves.");
+      mostrarMensaje("No tenemos claves.");
     } 
   }
-  
-  protected final void R() {
-    if (this.keypair.I()) {
-      P();
+  /**
+   * Inicia el proceso de descifrado de un archivo usando la clave pública.
+   * Se muestra un cuadro de diálogo para seleccionar el archivo a descifrar.
+   */
+  protected final void procesoDescifradoAsimetrico() {
+    if (this.keypair.getIsInicialized()) {
+      ReiniciarTextArea();
       JFileChooser jFileChooser = new JFileChooser();
       jFileChooser.setDialogTitle("Fichero a descifrar");
-      int i = jFileChooser.showOpenDialog(this.Z);
+      int i = jFileChooser.showOpenDialog(this.panelContenido);
       if (i == 0) {
-        String str = jFileChooser.getSelectedFile().getAbsolutePath();
-        Z z = new Z(I(), "Descifrado de Clave Pública");
-        z.I("\nProceso de descifrado de <" + str + ">.\n");
-        (new J(this, str, z)).execute();
+        String pathFichero = jFileChooser.getSelectedFile().getAbsolutePath();
+        VentanaProgressBarFicheros ventana = new VentanaProgressBarFicheros(crearVentanaPrincipal(), "Descifrado de Clave Pública");
+        ventana.I("\nProceso de descifrado de <" + pathFichero + ">.\n");
+        (new VentanaDescifradoAsimetrico(this, pathFichero, ventana)).execute();
       } 
     } else {
-      I("No tenemos claves.");
+      mostrarMensaje("No tenemos claves.");
     } 
   }
-  
-  protected final void T() {
-    if (this.keypair.I()) {
-      P();
+  /**
+   * Inicia el proceso de firma de un archivo usando la clave privada.
+   * Se muestra un cuadro de diálogo para seleccionar el archivo a firmar.
+   */
+  protected final void procesoFirmaDigital() {
+    if (this.keypair.getIsInicialized()) {
+      ReiniciarTextArea();
       JFileChooser jFileChooser = new JFileChooser();
       jFileChooser.setDialogTitle("Fichero a firmar");
-      int i = jFileChooser.showOpenDialog(this.Z);
+      int i = jFileChooser.showOpenDialog(this.panelContenido);
       if (i == 0) {
-        String str = jFileChooser.getSelectedFile().getAbsolutePath();
-        Z z = new Z(I(), "Firma con clave privada");
-        z.I("\nProceso de firma de <" + str + "> con Algoritmo: " + this.A.getSignAlgorithm() + "\n");
-        (new practica4.S(this, str, z)).execute();
+        String pathFichero = jFileChooser.getSelectedFile().getAbsolutePath();
+        VentanaProgressBarFicheros ventana = new VentanaProgressBarFicheros(crearVentanaPrincipal(), "Firma con clave privada");
+        ventana.I("\nProceso de firma de <" + pathFichero + "> con Algoritmo: " + this.signatureOptions.getSignAlgorithm() + "\n");
+        (new VentanaFirmarArchivo(this, pathFichero, ventana)).execute();
       } 
     } else {
-      I("No tenemos claves.");
+      mostrarMensaje("No tenemos claves.");
     } 
   }
-  
-  protected final void U() {
-    if (this.keypair.I()) {
-      P();
+  /**
+   * Inicia el proceso de verificación de la firma de un archivo.
+   * Se muestra un cuadro de diálogo para seleccionar el archivo a verificar.
+   */
+  protected final void procesoVerificacionFirmaDigital() {
+    if (this.keypair.getIsInicialized()) {
+      ReiniciarTextArea();
       JFileChooser jFileChooser = new JFileChooser();
       jFileChooser.setDialogTitle("Fichero a verificar");
-      int i = jFileChooser.showOpenDialog(this.Z);
+      int i = jFileChooser.showOpenDialog(this.panelContenido);
       if (i == 0) {
-        String str = jFileChooser.getSelectedFile().getAbsolutePath();
-        Z z = new Z(I(), "Verificación de firma");
-        z.I("\nProceso de verificación de firma de <" + str + ">\n");
-        (new A(this, str, z)).execute();
+        String pathFichero = jFileChooser.getSelectedFile().getAbsolutePath();
+        VentanaProgressBarFicheros ventana = new VentanaProgressBarFicheros(crearVentanaPrincipal(), "Verificación de firma");
+        ventana.I("\nProceso de verificación de firma de <" + pathFichero + ">\n");
+        (new VentanaVerificarFirma(this, pathFichero, ventana)).execute();
       } 
     } else {
-      I("No tenemos claves.");
+      mostrarMensaje("No tenemos claves.");
     } 
   }
-  
-  protected final void I(ParClavesP4 paramI) {
-    if (paramI.I()) {
-      P();
-      this.S.append("Clave pública: " + paramI.Z().toString());
-      this.S.append("\nClave privada: " + paramI.C().toString());
+  /**
+   * Muestra las claves actuales (pública y privada) en el área de texto.
+   *
+   * @param claves Objeto que contiene las claves.
+   */
+  protected final void mostrarParClaves(ParClavesP4 claves) {
+    if (claves.getIsInicialized()) {
+      ReiniciarTextArea();
+      this.areaText.append("Clave pública: " + claves.getPublicKey().toString());
+      this.areaText.append("\nClave privada: " + claves.getPrivateKey().toString());
     } else {
-      I("No tenemos claves.");
+      mostrarMensaje("No tenemos claves.");
     } 
   }
-  
-  protected final boolean I(ParClavesP4 parClaves, SignatureOptions paramSignatureOptions) {
+  /**
+   * Carga las claves desde un archivo de acuerdo con las opciones configuradas.
+   *
+   * @param parClaves         Objeto que contiene las claves.
+   * @param paramSignatureOptions Opciones de configuración para las claves.
+   * @return true si las claves se cargaron correctamente, false en caso contrario.
+   */
+  protected final boolean cargarParClavesDesdeFichero(ParClavesP4 parClaves, SignatureOptions paramSignatureOptions) {
     boolean bool = false;
-    P();
-    if (parClaves.B())
-      bool = parClaves.Z(paramSignatureOptions.getKeyFilename(), paramSignatureOptions.getKeyFilePasswd());
+    ReiniciarTextArea();
+    if (parClaves.generateKeyPair())
+      bool = parClaves.saveKeyPair(paramSignatureOptions.getKeyFilename(), paramSignatureOptions.getKeyFilePasswd());
     return bool;
   }
-  
-  protected final void Z(ParClavesP4 parClaves, SignatureOptions paramSignatureOptions) {
-    parClaves.I(paramSignatureOptions.getKeyFilename(), paramSignatureOptions.getKeyFilePasswd());
+
+  /**
+   * Inicializa las claves en base a las opciones de configuración.
+   *
+   * @param parClaves         Objeto que contiene las claves.
+   * @param paramSignatureOptions Opciones de configuración para las claves.
+   */
+  protected final void inicializarParClaves(ParClavesP4 parClaves, SignatureOptions paramSignatureOptions) {
+    parClaves.loadKeyPair(paramSignatureOptions.getKeyFilename(), paramSignatureOptions.getKeyFilePasswd());
   }
-  
-  protected final void C(ParClavesP4 parClaves, SignatureOptions paramSignatureOptions) {
-    parClaves.Z(paramSignatureOptions.getKeyFilename(), paramSignatureOptions.getKeyFilePasswd());
+  /**
+   * Guarda las claves en un archivo usando las opciones configuradas.
+   *
+   * @param parClaves         Objeto que contiene las claves.
+   * @param paramSignatureOptions Opciones de configuración para las claves.
+   */
+  protected final void guardarParClaves(ParClavesP4 parClaves, SignatureOptions paramSignatureOptions) {
+    parClaves.saveKeyPair(paramSignatureOptions.getKeyFilename(), paramSignatureOptions.getKeyFilePasswd());
   }
 }
 

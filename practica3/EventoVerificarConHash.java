@@ -3,6 +3,9 @@ package practica3;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+/**
+ * Clase para crear la lógica del GUI para verificar el hash de un archivo.
+ */
 public class EventoVerificarConHash implements ActionListener {
   private final Practica3 ventana;
 
@@ -18,7 +21,7 @@ public class EventoVerificarConHash implements ActionListener {
 }
 
 
-/* Location:              C:\Users\USUARIO\OneDrive - Universidad de Extremadura\Escritorio\Sergio\Uni\4º-curso\1º-cuatri\SRT\Prácticas-laboratorios\Entrega4\practica4-prototipo.jar!\practica3\F.class
+/* Location:              C:\Users\USUARIO\OneDrive - Universidad de Extremadura\Escritorio\Sergio\Uni\4º-curso\1º-cuatri\SRT\Prácticas-laboratorios\Entrega4\practica4-prototipo.jar!\practica3\crearMenuItemCifrar.class
  * Java compiler version: 6 (50.0)
  * JD-Core Version:       1.1.3
  */

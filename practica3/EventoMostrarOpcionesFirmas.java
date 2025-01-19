@@ -6,6 +6,9 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
+/**
+ * Logica para mostrar las opciones de algoritmos de firmas
+ */
 public class EventoMostrarOpcionesFirmas implements ActionListener {
   private final Practica3 ventana;
 
@@ -21,7 +24,7 @@ public class EventoMostrarOpcionesFirmas implements ActionListener {
     optionsDialog.pack();
 
     // Obtener la ubicación de la ventana principal
-    Point point = ventana.I.getLocation();
+    Point point = ventana.ventanaPrincipal.getLocation();
     point.translate(20, 20); // Desplazar la ubicación para posicionar el diálogo
     optionsDialog.setLocation(point);
 

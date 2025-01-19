@@ -6,20 +6,35 @@ import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.PBEParameterSpec;
 
 public class PBEInicializacion {
-  public static final SecretKey I(String paramString, char[] paramArrayOfchar) {
+  /**
+   * Genera una clave de sesión a partir de una contraseña y un algoritmo
+   *
+   * @param password  Contraseña a partir de la cual se generará la clave de sesión
+   * @param algorithm Algoritmo con el que se generará la clave de sesión
+   * @return SecretKey Clave de sesión generada
+   * @throws Exception Si el algoritmo no existe o si la clave generada no es válida
+   */
+  public static final SecretKey generateSessionKey(String algorithm, char[] password) {
     try {
-      PBEKeySpec pBEKeySpec = new PBEKeySpec(paramArrayOfchar);
-      SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance(paramString);
+      PBEKeySpec pBEKeySpec = new PBEKeySpec(password);
+      SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance(algorithm);
       return secretKeyFactory.generateSecret(pBEKeySpec);
     } catch (Exception exception) {
       exception.printStackTrace();
       return null;
     } 
   }
-  
-  public static final PBEParameterSpec I(byte[] paramArrayOfbyte, int paramInt) {
+
+  /**
+   * Devuelve el parametro de preparacion PBE para el proceso de cifrado de nuestro archivo.
+   *
+   * @param salt Valor aleatorio que se agrega a los datos al realizar el proceso de cifrado
+   * @param iteration Numero de iteraciones que realizará nuestro proceso de cifrado
+   * @return
+   */
+  public static final PBEParameterSpec preparcionPBESpec(byte[] salt, int iteration) {
     try {
-      return new PBEParameterSpec(paramArrayOfbyte, paramInt);
+      return new PBEParameterSpec(salt, iteration);
     } catch (Exception exception) {
       exception.printStackTrace();
       return null;

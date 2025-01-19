@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.Security;
@@ -19,139 +20,190 @@ import srt.Header;
 public class FileProtectoMAC extends CifradoOriginal {
   private Practica3 append = null;
   
-  private static int close = 32768;
+  private static int BUFFER_SIZE = 32768;
   
-  private static final byte[] contentEquals = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
+  private static final byte[] SALT = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8 };
   
   public FileProtectoMAC() {}
   
   public FileProtectoMAC(Practica3 paramS) {
     this.append = paramS;
   }
-  
-  public final boolean Z(String paramString, Header paramHeader) {
+
+  /**
+   * Carga la cabecera de un archivo especificado.
+   * @param inputFile Ruta del archivo a leer.
+   * @param header Objeto Header donde se almacenará la información de la cabecera.
+   * @return true si se carga correctamente, false en caso contrario.
+   */
+
+  public final boolean cargarCabeceraArchivo(String inputFile, Header header) {
     try {
-      FileInputStream fileInputStream = new FileInputStream(paramString);
-      boolean bool = paramHeader.load(fileInputStream);
+      FileInputStream fileInputStream = new FileInputStream(inputFile);
+      boolean bool = header.load(fileInputStream);
       fileInputStream.close();
       return bool;
     } catch (Exception exception) {
-      this.append.I("Problemas al leer el fichero: " + paramString + "\n");
+      this.append.mostrarMensaje("Problemas al leer el fichero: " + inputFile + "\n");
       return false;
     } 
   }
-  
-  public final void I(String paramString1, String paramString2, String paramString3, String paramString4) {
-    this.append.I("Proceso de hashing de <" + paramString1 + "> con Algoritmo: " + paramString4 + "\n");
-    try {
-      FileInputStream fileInputStream = new FileInputStream(paramString1);
-      FileOutputStream fileOutputStream = new FileOutputStream(paramString2);
-      MessageDigest messageDigest = MessageDigest.getInstance(paramString4);
-      messageDigest.update(paramString3.getBytes());
-      DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, messageDigest);
-      byte[] arrayOfByte = new byte[close];
-      int i = 0;
-      while (true) {
-        int j = digestInputStream.read(arrayOfByte, 0, close);
-        i += j;
-        if (j != close) {
-          messageDigest = digestInputStream.getMessageDigest();
-          byte[] arrayOfByte1 = messageDigest.digest();
-          digestInputStream.close();
-          Header header = new Header((byte)10, "none", paramString4, arrayOfByte1);
-          header.save(fileOutputStream);
-          fileInputStream.close();
-          fileInputStream = new FileInputStream(paramString1);
-          while (true) {
-            j = fileInputStream.read(arrayOfByte, 0, close);
-            fileOutputStream.write(arrayOfByte, 0, j);
-            if (j != close) {
-              this.append.I("\nMD: " + srt.I.I(arrayOfByte1));
-              this.append.I("\nHecho (" + i + " bytes).\n");
-              fileOutputStream.flush();
-              fileOutputStream.close();
-              fileInputStream.close();
-              return;
-            } 
-          } 
-//          break;
-        } 
-      } 
+
+  /**
+   * Aplica un hash a un archivo de entrada y escribe el resultado en un archivo de salida.
+   * @param inputFile Archivo de entrada.
+   * @param outputFile Archivo de salida.
+   * @param secreto Contraseña o clave para el hash.
+   * @param algoritmo Algoritmo de hashing a utilizar.
+   */
+  public final void applyHash(String inputFile, String outputFile, String secreto, String algoritmo) {
+    this.append.mostrarMensaje("Proceso de hashing de <" + inputFile + "> con Algoritmo: " + algoritmo + "\n");
+    try (FileInputStream fileInputStream = new FileInputStream(inputFile);
+         FileOutputStream fileOutputStream = new FileOutputStream(outputFile)) {
+
+      MessageDigest messageDigest = MessageDigest.getInstance(algoritmo);
+      messageDigest.update(secreto.getBytes(StandardCharsets.UTF_8));
+
+      try (DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, messageDigest)) {
+        byte[] aux= new byte[BUFFER_SIZE];
+        byte[] buffer = new byte[BUFFER_SIZE];
+        int bytesRead;
+        int totalBytes = 0;
+
+        while ((bytesRead = digestInputStream.read(buffer)) > -1) {
+          totalBytes += bytesRead;
+        }
+
+        aux = messageDigest.digest();
+        System.out.println("Total bytes: " + totalBytes);
+
+        Header header = new Header((byte) 10, "none", algoritmo, aux);
+        header.save(fileOutputStream);
+
+        fileInputStream.close();
+        digestInputStream.close();
+        // Escribir el contenido original del archivo después de la cabecera.
+        try (FileInputStream originalFileInput = new FileInputStream(inputFile)) {
+
+
+          while ((bytesRead = originalFileInput.read(buffer)) > -1) {
+
+            fileOutputStream.write(buffer, 0, bytesRead);
+
+          }
+
+        }
+
+//        append.mostrarMensaje("\nMD: " + srt.I.mostrarBytesComoString(aux));
+        append.mostrarMensaje("\nHecho (" + totalBytes + " bytes).\n");
+      }
+
+
+
     } catch (FileNotFoundException fileNotFoundException) {
-      this.append.I("Fichero no se encuentra: " + paramString1 + "\n");
+      this.append.mostrarMensaje("Fichero no se encuentra: " + inputFile + "\n");
     } catch (IOException iOException) {
-      this.append.I("Error de E/S en.\n");
+      this.append.mostrarMensaje("Error de E/S en.\n");
     } catch (Exception exception) {
-      this.append.I(String.valueOf(exception.getMessage()) + "\n");
+      this.append.mostrarMensaje(String.valueOf(exception.getMessage()) + "\n");
     } 
   }
-  
-  public final void Z(String paramString1, String paramString2, String paramString3, String paramString4) {
-    try {
-      this.append.I("Proceso de verificación de <" + paramString1 + "> con: " + paramString4 + "\n");
-      FileInputStream fileInputStream = new FileInputStream(paramString1);
-      FileOutputStream fileOutputStream = new FileOutputStream(paramString2);
-      Header headerCifradoMAC = new Header();
-      headerCifradoMAC.load(fileInputStream);
-      int i = 0;
-      MessageDigest messageDigest = MessageDigest.getInstance(headerCifradoMAC.getAlgorithm2());
-      messageDigest.update(paramString3.getBytes());
-      DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, messageDigest);
-      byte[] arrayOfByte = new byte[close];
-      while (true) {
-        int j = digestInputStream.read(arrayOfByte, 0, close);
-        i += j;
-        fileOutputStream.write(arrayOfByte, 0, j);
-        if (j != close) {
-          messageDigest = digestInputStream.getMessageDigest();
-          byte[] arrayOfByte1 = messageDigest.digest();
-          digestInputStream.close();
-          this.append.I("\nHecho (" + i + " bytes).\n");
-          String str1 = srt.I.I(arrayOfByte1);
-          String str2 = srt.I.I(headerCifradoMAC.getData());
-          this.append.I("\nMD almacenado: " + str2);
-          this.append.I("\nMD  calculado: " + str1);
-          if (str1.contentEquals(str2)) {
-            this.append.I("\nHash idénticos, el fichero no ha sido modificado.\n");
-          } else {
-            this.append.I("\nHash diferentes, el fichero ha sido modificado (o la contraseï¿½a no es correcta).\n");
-            (new File(paramString2)).deleteOnExit();
-          } 
-          fileInputStream.close();
-          fileOutputStream.flush();
-          fileOutputStream.close();
-          return;
-        } 
-      } 
+
+
+
+  /**
+   * Convierte bytes a hexadecimal
+   * @param bytes Los bytes a convertir
+   * @return String con el valor hexadcimal de los bytes pasado por parametro.
+   */
+  protected static String bytesToHex(byte[] bytes) {
+    StringBuilder sb = new StringBuilder();
+    for (byte b : bytes) {
+      sb.append(String.format("%02x", b));
+    }
+    return sb.toString();
+  }
+  /**
+   * Verifica el hash de un archivo.
+   * @param inputFile Archivo de entrada con el hash incorporado.
+   * @param outputFile Archivo donde se almacenará el contenido sin la cabecera.
+   * @param secreto Contraseña o clave para la verificación del hash.
+   * @param algoritmo Algoritmo utilizado para generar el hash.
+   */
+  public final void verifyHash(String inputFile, String outputFile, String secreto, String algoritmo) {
+    append.mostrarMensaje("Proceso de verificación de <" + inputFile + "> con: " + algoritmo + "\n");
+    try (FileInputStream fileInputStream = new FileInputStream(inputFile);
+         FileOutputStream fileOutputStream = new FileOutputStream(outputFile)) {
+
+      Header header = new Header();
+      header.load(fileInputStream);
+
+      MessageDigest messageDigest = MessageDigest.getInstance(header.getAlgorithm2());
+      messageDigest.update(secreto.getBytes());
+
+      try (DigestInputStream digestInputStream = new DigestInputStream(fileInputStream, messageDigest)) {
+        byte[] buffer = new byte[BUFFER_SIZE];
+        int bytesRead;
+
+        while ((bytesRead = digestInputStream.read(buffer)) != -1) {
+          fileOutputStream.write(buffer, 0, bytesRead);
+        }
+
+        byte[] computedHash = digestInputStream.getMessageDigest().digest();
+//        String storedHash = srt.I.mostrarBytesComoString(header.getData());
+        String storedHash = bytesToHex(header.getData()); //Se pasa el HASH del archivo a hexadecimal
+//        String calculatedHash = srt.I.mostrarBytesComoString(computedHash);
+        String calculatedHash = bytesToHex(computedHash); //Se pasa el HASH calculado a hexadecimal
+
+        append.mostrarMensaje("\nMD almacenado: " + storedHash);
+        append.mostrarMensaje("\nMD calculado: " + calculatedHash);
+
+          if (storedHash.contentEquals(calculatedHash)) {
+
+            append.mostrarMensaje("\nHash idénticos, el fichero no ha sido modificado.\n");
+        } else {
+          append.mostrarMensaje("\nHash diferentes, el fichero ha sido modificado (o la contraseña no es correcta).\n");
+          new File(outputFile).deleteOnExit();
+        }
+      }
+
     } catch (Exception exception) {
-      this.append.I(String.valueOf(exception.getMessage()) + "\n");
+      this.append.mostrarMensaje(String.valueOf(exception.getMessage()) + "\n");
     } 
   }
-  
-  public final void C(String paramString1, String paramString2, String paramString3, String paramString4) {
-    this.append.I("Proceso de HMac de <" + paramString1 + "> con Algoritmo: " + paramString4 + "\n");
+
+  /**
+   * Aplica un HMAC a un archivo de entrada y escribe el resultado en un archivo de salida.
+   * @param inputFile Archivo de entrada.
+   * @param outputFile Archivo de salida.
+   * @param secreto Contraseña o clave para el hash.
+   * @param algoritmo Algoritmo de hashing a utilizar.
+   */
+  public final void applyHMAC(String inputFile, String outputFile, String secreto, String algoritmo) {
+    this.append.mostrarMensaje("Proceso de HMac de <" + inputFile + "> con Algoritmo: " + algoritmo + "\n");
     try {
-      FileInputStream fileInputStream = new FileInputStream(paramString1);
-      FileOutputStream fileOutputStream = new FileOutputStream(paramString2);
-      Mac mac = Mac.getInstance(paramString4);
-      SecretKey secretKey = practica3.GenerarSecretKey.I(paramString3.toCharArray(), contentEquals, this.I, mac.getMacLength());
+      FileInputStream fileInputStream = new FileInputStream(inputFile);
+      FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
+      Mac mac = Mac.getInstance(algoritmo);
+      SecretKey secretKey = practica3.GenerarSecretKey.generateSecretKey(secreto.toCharArray(), SALT, this.num_bytes, mac.getMacLength());
       mac.init(secretKey);
-      byte[] arrayOfByte = new byte[close];
+      byte[] arrayOfByte = new byte[BUFFER_SIZE];
       while (true) {
-        int i = fileInputStream.read(arrayOfByte, 0, close);
+        int i = fileInputStream.read(arrayOfByte, 0, BUFFER_SIZE);
         mac.update(arrayOfByte, 0, i);
-        if (i != close) {
-          byte[] arrayOfByte1 = mac.doFinal();
+        if (i != BUFFER_SIZE) {
+          byte[] macValue = mac.doFinal();
           fileInputStream.close();
-          Header headerCifradoMAC = new Header((byte)10, "none", paramString4, arrayOfByte1);
+          Header headerCifradoMAC = new Header((byte)10, "none", algoritmo, macValue);
           headerCifradoMAC.save(fileOutputStream);
           fileInputStream.close();
-          fileInputStream = new FileInputStream(paramString1);
+          fileInputStream = new FileInputStream(inputFile);
           while (true) {
-            i = fileInputStream.read(arrayOfByte, 0, close);
+            i = fileInputStream.read(arrayOfByte, 0, BUFFER_SIZE);
             fileOutputStream.write(arrayOfByte, 0, i);
-            if (i != close) {
-              this.append.I("\nMD: " + srt.I.I(arrayOfByte1));
+            if (i != BUFFER_SIZE) {
+//              this.append.mostrarMensaje("\nMD: " + srt.I.mostrarBytesComoString(arrayOfByte1));
+              this.append.mostrarMensaje("\nMD: " + bytesToHex(macValue));
               fileOutputStream.flush();
               fileOutputStream.close();
               fileInputStream.close();
@@ -162,41 +214,48 @@ public class FileProtectoMAC extends CifradoOriginal {
         } 
       } 
     } catch (FileNotFoundException fileNotFoundException) {
-      this.append.I("Fichero no se encuentra: " + paramString1 + "\n");
+      this.append.mostrarMensaje("Fichero no se encuentra: " + inputFile + "\n");
     } catch (IOException iOException) {
-      this.append.I("Error de E/S en.\n");
+      this.append.mostrarMensaje("Error de E/S en.\n");
     } catch (Exception exception) {
-      this.append.I(String.valueOf(exception.getMessage()) + "\n");
+      this.append.mostrarMensaje(String.valueOf(exception.getMessage()) + "\n");
     } 
   }
-  
-  public final void B(String paramString1, String paramString2, String paramString3, String paramString4) {
+  /**
+   * Verifica el HMAC de un archivo.
+   * @param inputFile Archivo de entrada con el hash incorporado.
+   * @param outputFile Archivo donde se almacenará el contenido sin la cabecera.
+   * @param secreto Contraseña o clave para la verificación del HMAC.
+   * @param algoritmo Algoritmo utilizado para generar el HMAC.
+   */
+  public final void verifyHMAC(String inputFile, String outputFile, String secreto, String algoritmo) {
     try {
-      this.append.I("Proceso de verificación de <" + paramString1 + "> con: " + paramString4 + "\n");
-      FileInputStream fileInputStream = new FileInputStream(paramString1);
-      FileOutputStream fileOutputStream = new FileOutputStream(paramString2);
+      this.append.mostrarMensaje("Proceso de verificación de <" + inputFile + "> con: " + algoritmo + "\n");
+      FileInputStream fileInputStream = new FileInputStream(inputFile);
+      FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
       Header headerCifradoMAC = new Header();
       headerCifradoMAC.load(fileInputStream);
-      Mac mac = Mac.getInstance(paramString4);
-      SecretKey secretKey = practica3.GenerarSecretKey.I(paramString3.toCharArray(), contentEquals, this.I, mac.getMacLength());
+
+      Mac mac = Mac.getInstance(algoritmo);
+      SecretKey secretKey = practica3.GenerarSecretKey.generateSecretKey(secreto.toCharArray(), SALT, this.num_bytes, mac.getMacLength());
       mac.init(secretKey);
-      byte[] arrayOfByte = new byte[close];
+      byte[] arrayOfByte = new byte[BUFFER_SIZE];
       while (true) {
-        int i = fileInputStream.read(arrayOfByte, 0, close);
+        int i = fileInputStream.read(arrayOfByte, 0, BUFFER_SIZE);
         mac.update(arrayOfByte, 0, i);
         fileOutputStream.write(arrayOfByte, 0, i);
-        if (i != close) {
-          byte[] arrayOfByte1 = mac.doFinal();
-          this.append.I("\nHecho.\n");
-          String str1 = srt.I.I(arrayOfByte1);
-          String str2 = srt.I.I(headerCifradoMAC.getData());
-          this.append.I("\nMD almacenado: " + str2);
-          this.append.I("\nMD  calculado: " + str1);
-          if (str1.contentEquals(str2)) {
-            this.append.I("\nHMac idénticos, el fichero no ha sido modificado.\n");
+        if (i != BUFFER_SIZE) {
+          byte[] macValue = mac.doFinal();
+          this.append.mostrarMensaje("\nHecho.\n");
+          String macCalculatedHex = bytesToHex(macValue);
+          String macStoragedFileHex = bytesToHex(headerCifradoMAC.getData());
+          this.append.mostrarMensaje("\nMD almacenado: " + macStoragedFileHex);
+          this.append.mostrarMensaje("\nMD  calculado: " + macCalculatedHex);
+          if (macCalculatedHex.contentEquals(macStoragedFileHex)) {
+            this.append.mostrarMensaje("\nHMac idénticos, el fichero no ha sido modificado.\n");
           } else {
-            this.append.I("\nHMac diferentes, el fichero ha sido modificado (o la contraseña no es correcta).\n");
-            (new File(paramString2)).deleteOnExit();
+            this.append.mostrarMensaje("\nHMac diferentes, el fichero ha sido modificado (o la contraseña no es correcta).\n");
+            (new File(outputFile)).deleteOnExit();
           } 
           fileInputStream.close();
           fileOutputStream.flush();
@@ -205,28 +264,34 @@ public class FileProtectoMAC extends CifradoOriginal {
         } 
       } 
     } catch (Exception exception) {
-      this.append.I(String.valueOf(exception.getMessage()) + "\n");
+      this.append.mostrarMensaje(String.valueOf(exception.getMessage()) + "\n");
     } 
   }
-  
+
+  /**
+   * Muestra los algoritmos de cifrado disponibles para utilizar
+   */
   final void MostrarInformacionAlgoritmosCifrado() {
     Set<String> set = Security.getAlgorithms("Cipher");
-    this.append.I("\nInformación sobre la JCE:");
-    this.append.I("\nAlgoritmos de cifrado disponibles: \n");
+    this.append.mostrarMensaje("\nInformación sobre la JCE:");
+    this.append.mostrarMensaje("\nAlgoritmos de cifrado disponibles: \n");
     Iterator<String> iterator = set.iterator();
     while (iterator.hasNext())
-      this.append.I((new StringBuilder()).append(iterator.next()).append(", ").toString()); 
-    this.append.I("\n");
+      this.append.mostrarMensaje((new StringBuilder()).append(iterator.next()).append(", ").toString());
+    this.append.mostrarMensaje("\n");
   }
-  
+
+  /**
+   * Muestra los algoritmos disponibles a utilizar que nos proporciona el servicio de MessageDigest
+   */
   final void MostrarInformacionAlgoritmosResumen() {
     Set<String> set = Security.getAlgorithms("MessageDigest");
-    this.append.I("\nInformación sobre la JCE:");
-    this.append.I("Algoritmos de resumen disponibles: ");
+    this.append.mostrarMensaje("\nInformación sobre la JCE:");
+    this.append.mostrarMensaje("Algoritmos de resumen disponibles: ");
     Iterator<String> iterator = set.iterator();
     while (iterator.hasNext())
-      this.append.I((new StringBuilder()).append(iterator.next()).append(", ").toString()); 
-    this.append.I("\n");
+      this.append.mostrarMensaje((new StringBuilder()).append(iterator.next()).append(", ").toString());
+    this.append.mostrarMensaje("\n");
   }
 }
 

@@ -2,7 +2,11 @@ package practica3;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-//CLASE PARA HACER LA LOGICA DE LA INTERFAZ PARA PROTEGER UN FICHERO CON HASH
+
+/**
+ * CLASE PARA HACER LA LOGICA DE LA INTERFAZ PARA PROTEGER UN FICHERO CON HASH
+ */
+
 public class EventoProtegerConHash implements ActionListener {
   private final Practica3 ventana;
 

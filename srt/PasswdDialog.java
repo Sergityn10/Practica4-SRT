@@ -11,6 +11,9 @@ import javax.swing.JPasswordField;
 import javax.swing.JProgressBar;
 import javax.swing.border.EmptyBorder;
 
+/**
+ * Clase para mostrar una ventana con la logica de una contraseña o clave de paso segura.
+ */
 public class PasswdDialog extends JDialog {
   public static final byte PD_ONE_PASSWD = 0;
   
@@ -86,12 +89,12 @@ public class PasswdDialog extends JDialog {
     jPanel.setLayout(new FlowLayout(2));
     getContentPane().add(jPanel, "South");
     JButton jButton = new JButton("OK");
-    jButton.addActionListener(new F(this, paramByte));
+    jButton.addActionListener(new EventoContrasenasNoCoinciden(this, paramByte));
     jButton.setActionCommand("OK");
     jPanel.add(jButton);
     getRootPane().setDefaultButton(jButton);
     jButton = new JButton("Cancel");
-    jButton.addActionListener(new J(this));
+    jButton.addActionListener(new EventoMostrarDialogoContrasena(this));
     jButton.setActionCommand("Cancel");
     jPanel.add(jButton);
   }

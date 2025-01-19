@@ -3,7 +3,10 @@ package practica3;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
-//EVENTO CREADO PARA SIMULAR LA LOGICA SOBRE LA INTERFAZ PARA VER LA INFORMACION SOBRE LOS ALGORITMOS
+/**
+ EVENTO CREADO PARA SIMULAR LA LOGICA SOBRE LA INTERFAZ PARA VER LA INFORMACION SOBRE LOS ALGORITMOS
+ *
+ */
 public class EventoVerInformacion implements ActionListener {
   private final Practica3 ventana;
 

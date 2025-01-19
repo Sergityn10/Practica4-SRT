@@ -17,69 +17,87 @@ public class DigitalSignature extends FileProtectoMAC {
   public DigitalSignature(Practica4 paramPractica4) {
     this.append = paramPractica4;
   }
-  
-  public final void firmarFicheroClavePrivada(String path, String paramString2, PrivateKey paramPrivateKey, String algoritmoClavePrivada, Z paramZ) {
+
+  /**
+   * Realiza el proceso de firma con la clave privada, creando un nuevo fichero con la firma
+   * @param inputFile Archivo que se quiere firmar
+   * @param outputFile Archivo donde se guarda el nuevo archivo firmado
+   * @param paramPrivateKey Clave privada con la que se realiza la firma
+   * @param algoritmoClavePrivada Algoritmo utilizado para firmar
+   * @param ventanaProgreso Ventana donde se muestra informacion sobre el proceso de firma
+   */
+  public final void firmarFicheroClavePrivada(String inputFile, String outputFile, PrivateKey paramPrivateKey, String algoritmoClavePrivada, VentanaProgressBarFicheros ventanaProgreso) {
     try {
-      paramZ.I("Firma privada: " + paramPrivateKey.toString());
-      paramZ.I("Firma algoritmo: " + algoritmoClavePrivada);
-      FileInputStream fileInputStream = new FileInputStream(path);
+      ventanaProgreso.I("Firma privada: " + paramPrivateKey.toString());
+      ventanaProgreso.I("Firma algoritmo: " + algoritmoClavePrivada);
+      FileInputStream fileInputStream = new FileInputStream(inputFile);
       int j = 0;
       int k = fileInputStream.available();
       Signature signature = Signature.getInstance(algoritmoClavePrivada);
       signature.initSign(paramPrivateKey);
-      byte[] arrayOfByte1 = new byte[16];
+      byte[] buffer = new byte[1024];
       int i;
-      while ((i = fileInputStream.read(arrayOfByte1)) > -1) {
+      while ((i = fileInputStream.read(buffer)) > -1) {
         j += i;
-        signature.update(arrayOfByte1, 0, i);
-        paramZ.I(j * 100 / k);
+        signature.update(buffer, 0, i);
+        ventanaProgreso.I(j * 100 / k);
       }
 
-      byte[] arrayOfByte2 = signature.sign(); //TODO AQUI ESTA EL FALLO
-      paramZ.I("\nFirma (" + arrayOfByte2.length + " bytes): " + srt.I.I(arrayOfByte2) + "\n");
-      FileOutputStream fileOutputStream = new FileOutputStream(paramString2);
+      byte[] firma = signature.sign();
+
+      ventanaProgreso.I("\nFirma (" + firma.length + " bytes): " + FileProtectoMAC.bytesToHex(firma) + "\n");
+      FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
       fileInputStream.close();
 
-      FileInputStream newFileInputStream = new FileInputStream(path);
-      Header headerCifradoMAC = new Header(SignatureOptions.OP_SIGNED, "none", algoritmoClavePrivada, arrayOfByte2);
+      FileInputStream newFileInputStream = new FileInputStream(inputFile);
+      Header headerCifradoMAC = new Header(SignatureOptions.OP_SIGNED, "none", algoritmoClavePrivada, firma);
       headerCifradoMAC.save(fileOutputStream);
-      paramZ.I("\nEscribiendo fichero firmado: " + paramString2 + "\n");
-      while ((i = newFileInputStream.read(arrayOfByte1)) != -1)
-        fileOutputStream.write(arrayOfByte1, 0, i); 
+
+      ventanaProgreso.I("\nEscribiendo fichero firmado: " + outputFile + "\n");
+      while ((i = newFileInputStream.read(buffer)) != -1)
+        fileOutputStream.write(buffer, 0, i);
       fileOutputStream.close();
       newFileInputStream.close();
     } catch (Exception exception) {
       System.err.println(exception);
     } 
   }
-  
-  public final boolean verificarFicheroFirmado(String pathEntrada, String pathSalida, PublicKey paramPublicKey, Z paramZ) {
+
+  /**
+   * Realiza el proceso de verificacion de firma con la clave publica, creando un nuevo fichero
+   * @param pathEntrada Fichero a verificar la firma
+   * @param pathSalida Fichreo de salida con la firma verificada
+   * @param paramPublicKey Clave publica utilizada para la verificacion de la firma
+   * @param ventanaProgreso Ventana auxiliar para mostrar informacion sobre el proceso de verificacion
+   * @return
+   */
+  public final boolean verificarFicheroFirmado(String pathEntrada, String pathSalida, PublicKey paramPublicKey, VentanaProgressBarFicheros ventanaProgreso) {
     boolean bool = false;
     try {
       FileOutputStream fileOutputStream = new FileOutputStream(pathSalida);
       FileInputStream fileInputStream = new FileInputStream(pathEntrada);
-      Header z = new Header();
-      paramZ.I("Firma publica: " + paramPublicKey.toString());
-      if (z.load(fileInputStream)) {
+      Header cabecera = new Header();
+      if (cabecera.load(fileInputStream)) {
         int j = 0;
         int k = fileInputStream.available();
-        paramZ.I("\nFirma original (" + (z.getData()).length + " bytes): " + srt.I.I(z.getData()) + "\n");
-        Signature signature = Signature.getInstance(z.getAlgorithm2());
-        paramZ.I("Algoritmo utilizado: " + z.getAlgorithm2());
+        ventanaProgreso.I("\nFirma original (" + (cabecera.getData()).length + " bytes): " + FileProtectoMAC.bytesToHex(cabecera.getData()) + "\n");
+        Signature signature = Signature.getInstance(cabecera.getAlgorithm2());
+        ventanaProgreso.I("Algoritmo utilizado: " + cabecera.getAlgorithm2());
         signature.initVerify(paramPublicKey);
-        byte[] arrayOfByte = new byte[1024];
+        byte[] buffer = new byte[1024];
         int i;
-        while ((i = fileInputStream.read(arrayOfByte)) > -1) {
+        while ((i = fileInputStream.read(buffer)) > -1) {
           j += i;
-          paramZ.I(j * 100 / k);
-          signature.update(arrayOfByte, 0, i);
-          fileOutputStream.write(arrayOfByte, 0, i);
-        } 
-        if (signature.verify(z.getData())) {
-          paramZ.I("\nFirma correcta.\n");
+          ventanaProgreso.I(j * 100 / k);
+          signature.update(buffer, 0, i);
+          fileOutputStream.write(buffer, 0, i);
+        }
+
+        if (signature.verify(cabecera.getData())) {
+          ventanaProgreso.I("\nFirma correcta.\n");
           bool = true;
         } else {
-          paramZ.I("\nFirma no válida.\n");
+          ventanaProgreso.I("\nFirma no válida.\n");
           bool = false;
         } 
         fileOutputStream.close();
@@ -90,15 +108,23 @@ public class DigitalSignature extends FileProtectoMAC {
     } 
     return bool;
   }
-  
-  public final void cifrarBloques(String paramString1, String paramString2, PublicKey paramPublicKey, String paramString3, practica4.Z paramZ) {
+
+  /**
+   * Función para cifrar un fichero utilizando cifrado asimétrico
+   * @param inputFile Fichero de entrada a cifrar
+   * @param ouputFile Fichero de salida con la información cifrada
+   * @param paramPublicKey Clave pública a utilizar para el cifrado
+   * @param algoritmoCifAsimetrico Algoritmo de cifrado asimétrico utilizado
+   * @param ventanaProgreso Venatana auxiliar para mostrar información relacionada con el proceso de cifrado.
+   */
+  public final void cifrarBloques(String inputFile, String ouputFile, PublicKey paramPublicKey, String algoritmoCifAsimetrico, practica4.VentanaProgressBarFicheros ventanaProgreso) {
     try {
-      FileOutputStream fileOutputStream = new FileOutputStream(paramString2);
-      FileInputStream fileInputStream = new FileInputStream(paramString1);
+      FileOutputStream fileOutputStream = new FileOutputStream(ouputFile);
+      FileInputStream fileInputStream = new FileInputStream(inputFile);
       byte[] arrayOfByte1 = new byte[1];
-      Header z = new Header((byte)20, paramString3, "none", arrayOfByte1);
-      z.save(fileOutputStream);
-      Cipher cipher = Cipher.getInstance(paramString3);
+      Header header = new Header((byte)20, algoritmoCifAsimetrico, "none", arrayOfByte1);
+      header.save(fileOutputStream);
+      Cipher cipher = Cipher.getInstance(algoritmoCifAsimetrico);
       cipher.init(1, paramPublicKey);
       byte b1 = 53;
       byte b2 = 0;
@@ -111,38 +137,46 @@ public class DigitalSignature extends FileProtectoMAC {
         fileOutputStream.write(arrayOfByte);
         b2++;
         j += i;
-        paramZ.I(j * 100 / k);
+        ventanaProgreso.I(j * 100 / k);
       } 
-      paramZ.I("\nCifrados " + b2 + " bloques; " + j + " bytes.\n");
+      ventanaProgreso.I("\nCifrados " + b2 + " bloques; " + j + " bytes.\n");
       fileOutputStream.close();
       fileInputStream.close();
     } catch (Exception exception) {
       exception.printStackTrace();
     } 
   }
+
+  /**
+   * Función para descifrar un fichero utilizando cifrado asimétrico
+   * @param inputFile Fichero a descifrar
+   * @param outputFile Fichero donde se guardará el contenido del fichero descifrado
+   * @param paramPrivateKey Clave privada a utilizar para descifrar el contenido del archivo
+   * @param ventanaProgreso Ventana auxiliar para mostrar información relacionada con el proceso de descifrado.
+   */
   
-  public final void descifrarBloques(String paramString1, String paramString2, PrivateKey paramPrivateKey, practica4.Z paramZ) {
+  public final void descifrarBloques(String inputFile, String outputFile, PrivateKey paramPrivateKey, practica4.VentanaProgressBarFicheros ventanaProgreso) {
     try {
-      FileOutputStream fileOutputStream = new FileOutputStream(paramString2);
-      FileInputStream fileInputStream = new FileInputStream(paramString1);
-      Header z = new Header();
-      if (z.load(fileInputStream)) {
-        Cipher cipher = Cipher.getInstance(z.getAlgorithm1());
+      FileOutputStream fileOutputStream = new FileOutputStream(outputFile);
+      FileInputStream fileInputStream = new FileInputStream(inputFile);
+      Header header = new Header();
+      if (header.load(fileInputStream)) {
+        Cipher cipher = Cipher.getInstance(header.getAlgorithm1());
         cipher.init(2, paramPrivateKey);
         byte b1 = 64;
         byte b2 = 0;
         int j = 0;
         int k = fileInputStream.available();
-        byte[] arrayOfByte = new byte[b1];
+        byte[] buffer = new byte[b1];
         int i;
-        while ((i = fileInputStream.read(arrayOfByte)) != -1) {
-          byte[] arrayOfByte1 = cipher.doFinal(arrayOfByte, 0, i);
+        while ((i = fileInputStream.read(buffer)) != -1) {
+          byte[] arrayOfByte1 = cipher.doFinal(buffer, 0, i);
           fileOutputStream.write(arrayOfByte1);
           b2++;
           j += i;
-          paramZ.I(j * 100 / k);
+          ventanaProgreso.I(j * 100 / k);
         } 
-        paramZ.I("\nDescifrados " + b2 + " bloques; " + j + " bytes.\n");
+        ventanaProgreso.I("\nDescifrados " + b2 + " bloques; " + j + " bytes.\n");
         fileOutputStream.close();
         fileInputStream.close();
       } 
@@ -153,7 +187,3 @@ public class DigitalSignature extends FileProtectoMAC {
 }
 
 
-/* Location:              C:\Users\USUARIO\OneDrive - Universidad de Extremadura\Escritorio\Sergio\Uni\4º-curso\1º-cuatri\SRT\Prácticas-laboratorios\Entrega4\practica4-prototipo.jar!\practica4\C.class
- * Java compiler version: 6 (50.0)
- * JD-Core Version:       1.1.3
- */

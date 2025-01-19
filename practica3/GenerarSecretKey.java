@@ -7,10 +7,19 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 
 public class GenerarSecretKey extends PBEInicializacion {
-  public static final SecretKey I(char[] paramArrayOfchar, byte[] paramArrayOfbyte, int paramInt1, int paramInt2) {
+
+  /**
+   * Crea una nueva secret key
+   * @param secret Una clave privada para guardar el secreto
+   * @param datos Datos que se quieren guardar.
+   * @param iterationCount Numero de iteraciones de la funcion de creación de la clave secreta
+   * @param macLength Tamaño que va a tener el mac
+   * @return SecretKey El valor de la clave secreta creada.
+   */
+  public static final SecretKey generateSecretKey(char[] secret, byte[] datos, int iterationCount, int macLength) {
     try {
       SecretKeyFactory secretKeyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-      PBEKeySpec pBEKeySpec = new PBEKeySpec(paramArrayOfchar, paramArrayOfbyte, paramInt1, paramInt2);
+      PBEKeySpec pBEKeySpec = new PBEKeySpec(secret, datos, iterationCount, macLength);
       return secretKeyFactory.generateSecret(pBEKeySpec);
     } catch (Exception exception) {
       exception.printStackTrace();
